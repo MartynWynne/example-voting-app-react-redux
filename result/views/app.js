@@ -65,7 +65,7 @@ class Results extends React.Component {
     render(){
 
         return (
-            <div>
+            <div className="higher">
                 <div id="background-stats">
                     <div id="background-stats-1" style={{width: this.state.aPercent + "%"}}></div>
                     <div id="background-stats-2" style={{width: this.state.bPercent + "%"}}></div>

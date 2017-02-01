@@ -13,7 +13,9 @@ body{
   opacity:0;
   transition: all 1s linear;
 }
-
+.higher{
+  height:100%;
+}
 .divider{
   height: 150px;
   width:2px;
