@@ -1,50 +1,89 @@
-var app = angular.module('catsvsdogs', []);
-var socket = io.connect({transports:['polling']});
+const socket = io.connect({transports:['polling']});
 
-var bg1 = document.getElementById('background-stats-1');
-var bg2 = document.getElementById('background-stats-2');
-
-app.controller('statsCtrl', function($scope){
-  $scope.aPercent = 50;
-  $scope.bPercent = 50;
-
-  var updateScores = function(){
-    socket.on('scores', function (json) {
-       data = JSON.parse(json);
-       var a = parseInt(data.a || 0);
-       var b = parseInt(data.b || 0);
-
-       var percentages = getPercentages(a, b);
-
-       bg1.style.width = percentages.a + "%";
-       bg2.style.width = percentages.b + "%";
-
-       $scope.$apply(function () {
-         $scope.aPercent = percentages.a;
-         $scope.bPercent = percentages.b;
-         $scope.total = a + b;
-       });
-    });
-  };
-
-  var init = function(){
-    document.body.style.opacity=1;
-    updateScores();
-  };
-  socket.on('message',function(data){
-    init();
-  });
-});
-
-function getPercentages(a, b) {
-  var result = {};
-
-  if (a + b > 0) {
-    result.a = Math.round(a / (a + b) * 100);
-    result.b = 100 - result.a;
-  } else {
-    result.a = result.b = 50;
-  }
-
-  return result;
+function NoVotes () {
+    return <span>No votes yet</span>;
 }
+
+function OneVote (props) {
+    return <span>{props.total} vote</span>;
+}
+
+function ManyVotes (props) {
+    return <span>{props.total} votes</span>;
+}
+
+function TotalVotes(props) {
+    const total = props.total;
+    if (total === 0) {
+        return <NoVotes />;
+    } else if (total === 1) {
+        return <OneVote total={total} />;
+    } else {
+        return <ManyVotes total={total} />;
+    }
+}
+
+function Choices (props) {
+    return (
+        <div id="choice">
+            <div className="choice cats">
+                <div className="label">Cats</div>
+                <div className="stat">{props.aPercent}%</div>
+            </div>
+            <div className="divider"></div>
+            <div className="choice dogs">
+                <div className="label">Dogs</div>
+                <div className="stat">{props.bPercent}%</div>
+            </div>
+        </div>
+    );
+}
+
+class Results extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {aPercent: 50, bPercent:50, total:0};
+        this.showPage = this.showPage.bind(this);
+        this.updateScores = this.updateScores.bind(this);
+    }
+    componentDidMount() {
+        socket.on('message', this.showPage);
+    }
+    showPage(){
+        document.body.style.opacity = 1;
+        socket.on('scores', json => this.updateScores(json));
+    }
+    updateScores(json) {
+        const data = JSON.parse(json);
+
+        this.setState({
+            aPercent: Math.round(data.a / (data.a + data.b) * 100),
+            bPercent: Math.round(data.b / (data.a + data.b) * 100),
+            total: data.a + data.b
+        });
+    }
+    render(){
+
+        return (
+            <div>
+                <div id="background-stats">
+                    <div id="background-stats-1" style={{width: this.state.aPercent + "%"}}></div>
+                    <div id="background-stats-2" style={{width: this.state.bPercent + "%"}}></div>
+                </div>
+                <div id="content-container">
+                    <div id="content-container-center">
+                        <Choices aPercent={this.state.aPercent} bPercent={this.state.bPercent} />
+                    </div>
+                </div>
+                <div id="result">
+                    <TotalVotes total={this.state.total} />
+                </div>
+            </div>
+        );
+    }
+}
+
+ReactDOM.render(
+    <Results />,
+    document.getElementById('app')
+);
