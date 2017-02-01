@@ -1,7 +1,7 @@
-Example Voting App React/Redux
+Example Voting App React/Redux/ES6
 =========
 
-This is a fork of the popular [Exampla Voting App](https://github.com/docker/example-voting-app) but changed to use React/Redux instead of AngularJS
+This is a fork of the popular [Exampla Voting App](https://github.com/docker/example-voting-app) but changed to use React/Redux/ES6 instead of AngularJS
 
 Getting started
 ---------------
