@@ -1,21 +1,26 @@
-var express = require('express'),
-    async = require('async'),
-    pg = require("pg"),
-    cookieParser = require('cookie-parser'),
-    bodyParser = require('body-parser'),
-    methodOverride = require('method-override'),
-    app = express(),
-    server = require('http').Server(app),
-    io = require('socket.io')(server);
+import express from 'express';
+import webpack from 'webpack';
+import config from '../webpack.config.dev';
+import async  from 'async';
+import pg  from 'pg';
+import cookieParser  from 'cookie-parser';
+import bodyParser  from 'body-parser';
+import methodOverride  from 'method-override';
+import http  from 'http';
+import socketIo from 'socket.io';
+import path from 'path';
+
+/* eslint-disable no-console */
+
+const app = express();
+const server = http.Server(app);
+const io = socketIo(server);
+const port = process.env.PORT || 4000;
 
 io.set('transports', ['polling']);
-
-var port = process.env.PORT || 4000;
-
 io.sockets.on('connection', function (socket) {
 
   socket.emit('message', { text : 'Welcome!' });
-
   socket.on('subscribe', function (data) {
     socket.join(data.channel);
   });
@@ -24,9 +29,9 @@ io.sockets.on('connection', function (socket) {
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pg.connect('postgres://postgres@db/postgres', function(err, client, done) {
+    pg.connect('postgres://postgres@paris.wynne.co.nz/postgres', function(err, client, done) {
       if (err) {
-        console.error("Waiting for db");
+        console.error("Waiting for db - " + err);
       }
       callback(err, client);
     });
@@ -45,16 +50,16 @@ function getVotes(client) {
     if (err) {
       console.error("Error performing query: " + err);
     } else {
-      var votes = collectVotesFromResult(result);
+      const votes = collectVotesFromResult(result);
       io.sockets.emit("scores", JSON.stringify(votes));
     }
 
-    setTimeout(function() {getVotes(client) }, 1000);
+    setTimeout(function() {getVotes(client); }, 1000);
   });
 }
 
 function collectVotesFromResult(result) {
-  var votes = {a: 0, b: 0};
+  let votes = {a: 0, b: 0};
 
   result.rows.forEach(function (row) {
     votes[row.vote] = parseInt(row.count);
@@ -63,6 +68,14 @@ function collectVotesFromResult(result) {
   return votes;
 }
 
+const compiler = webpack(config);
+
+app.use(require('webpack-dev-middleware')(compiler, {
+    noInfo: true,
+    publicPath: config.output.publicPath
+}));
+
+app.use(require('webpack-hot-middleware')(compiler));
 app.use(cookieParser());
 app.use(bodyParser());
 app.use(methodOverride('X-HTTP-Method-Override'));
@@ -73,13 +86,13 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(express.static(__dirname + '/views'));
+app.use(express.static(__dirname + './../src'));
 
 app.get('/', function (req, res) {
-  res.sendFile(path.resolve(__dirname + '/views/index.html'));
+  res.sendFile(path.resolve(__dirname + './../src/index.html'));
 });
 
 server.listen(port, function () {
-  var port = server.address().port;
+  const port = server.address().port;
   console.log('App running on port ' + port);
 });
