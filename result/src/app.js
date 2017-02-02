@@ -6,6 +6,7 @@ import configureStore from './redux/configureStore';
 import {Provider} from 'react-redux';
 import io from 'socket.io-client';
 import {showPage, updateScores} from './redux/actions';
+import './styles.css'; //Webpack can import CSS files too!
 
 const store = configureStore({aPercent: 50, bPercent:50, total:0});
 

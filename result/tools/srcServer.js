@@ -29,7 +29,7 @@ io.sockets.on('connection', function (socket) {
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pg.connect('postgres://postgres@paris.wynne.co.nz/postgres', function(err, client, done) {
+    pg.connect('postgres://postgres@db/postgres', function(err, client, done) { //change @db to your exposed container if running on dev PC
       if (err) {
         console.error("Waiting for db - " + err);
       }
